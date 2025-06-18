@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gloss-Free SL Recognition</title>
+    <style>
+        /* styles.css content inlined */
+        html {
+            background: #000;
+        }
+
+        p {
+            text-align: justify;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background: transparent;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #ddd;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        main,
+        header,
+        footer {
+            backdrop-filter: blur(4px);
+            background: transparent;
+            border-radius: 12px;
+            margin: 1rem auto;
+            padding: 1.5rem 2rem;
+            max-width: 960px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            border-bottom: 1px solid white;
+            border-radius: 0;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            animation: slideIn 1s ease-out;
+            text-align: center;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        nav ul {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+        }
+
+        nav li {
+            margin: 0 1rem;
+        }
+
+        nav a {
+            color: #ddd;
+            text-decoration: none;
+            position: relative;
+            padding: 0.2rem;
+            transition: color 0.3s;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            background: #fff;
+            bottom: -2px;
+            left: 0;
+            transition: width 0.3s;
+        }
+
+        nav a:hover {
+            color: #fff;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        nav a.active {
+            color: #fff;
+        }
+
+        nav a.active::after {
+            width: 100%;
+        }
+
+        main h2 {
+            font-size: 2rem;
+            margin-bottom: 0.8rem;
+            border-left: 4px solid #fff;
+            padding-left: 0.6rem;
+        }
+
+        main section {
+            scroll-margin-top: 100px;
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .matrix-list {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .medium-zoom-overlay,
+        .medium-zoom-image--opened {
+            z-index: 9999 !important;
+        }
+
+        .image-container {
+            width: 100%;
+            text-align: center;
+        }
+
+        .arch-image {
+            width: 70%;
+        }
+
+        footer p {
+            text-align: center;
+        }
+
+        .matrix-container p {
+            text-align: center;
+            ;
+            margin-top: 0px;
+        }
+
+        a {
+            text-decoration: none;
+            color: lightblue;
+        }
+
+        .credits p{
+            margin-top: 0px;
+            margin-bottom: 0px;
+            text-align: center;;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="bg-canvas"></canvas>
+
+    <header>
+        <nav>
+            <ul>
+                <li><a href="#intro">Introduction</a></li>
+                <li><a href="#dataset">Dataset</a></li>
+                <li><a href="#architecture">Model Architecture</a></li>
+                <li><a href="#results">Results</a></li>
+                <li><a href="#conclusions">Conclusions</a></li>
+                <li><a href="#refs">References</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Unsupervised Gloss-Free Sign Language Recognition Using Transformer Model</h1>
+        <div class="credits">
+            <p>Tamer Yeşildağ - Eray Taymaz</p>
+            <p>Advisor: Assoc. Prof. Hacer Yalım Keleş</p>
+        </div>
+        <section id="intro" class="fade-in">
+            <h2>Introduction</h2>
+            <p> Sign language is a rich and complex visual language that plays a crucial role in
+                communication for the Deaf and hard-of-hearing communities. However, building automatic
+                systems to recognize sign language remains a difficult challenge due to limited annotated
+                datasets and the diversity of signing styles.</p>
+            <p>This project addresses these challenges by developing a gloss-free, unsupervised sign
+                language recognition model. Unlike traditional systems that depend on gloss annotations
+                which are textual labels describing individual signs we train our model using pseudo
+                glosses, which are automatically extracted keywords representing the meaning of sign
+                sequences. This approach removes the need for costly manual annotation.</p>
+            <p>In this project, we build upon the <a href="https://doi.org/10.48550/arXiv.2405.04164">Sign2GPT[1]</a>
+                framework and focus on the pretraining
+                stage, omitting the translation and language modeling components.</p>
+            <p> Our architecture leverages a frozen DINOv2 Vision Transformer for extracting spatial
+                features from video frames and a custom transformer encoder to model temporal
+                dynamics. The model is trained using a prototype-based contrastive loss that encourages the
+                recognition of relevant sign components without relying on gloss order or sentence
+                alignment.</p>
+            <p>By focusing on unsupervised learning and gloss-free recognition, this project demonstrates a
+                scalable and efficient approach to sign language understanding that can adapt to real-world
+                data with minimal supervision.</p>
+        </section>
+        <section id="dataset" class="fade-in">
+            <h2>Dataset</h2>
+            <p>We use the <a href="https://www-i6.informatik.rwth-aachen.de/~koller/RWTH-PHOENIX/">RWTH-PHOENIX-Weather
+                    2014T [2]</a> dataset, a benchmark
+                dataset widely used in sign language recognition and translation research. It contains
+                German Sign Language (DGS) recordings collected from real-world weather forecast
+                broadcasts.</p>
+            <p> The dataset includes:</p>
+            <ul>
+                <li>Video recordings of professional signers delivering weather reports.</li>
+                <li>Aligned spoken language transcripts in German for each video.</li>
+                <li>Train/validation/test splits, with over 7,000 sentence-level video clips in total.</li>
+            </ul>
+            <p> Each video consists of a continuous sequence of signs, often several seconds long,
+                recorded at a high frame rate. The dataset reflects real broadcast conditions, including
+                varying signer poses, lighting, and speed making it ideal for evaluating models under realistic
+                conditions</p>
+            <p>
+                In our gloss-free approach, we do not use the manual gloss annotations provided. Instead,
+                we extract pseudo-glosses directly from the spoken German sentences, enabling the model
+                to learn visual-semantic representations without relying on manually labeled gloss data.
+            </p>
+            <div class="image-container">
+                <img src="./phoenix.png" alt="RWTH-PHOENIX-Weather 2014T dataset example" />
+            </div>
+        </section>
+        <section id="architecture" class="fade-in">
+            <h2>Model Architecture</h2>
+            <p><b>Feature Extraction:</b></p>
+            <ul>
+                <li> Raw video frames are first processed using a frozen DINOv2 Vision Transformer (ViT-S/14).</li>
+                <li> DINOv2 extracts spatial embeddings from each video frame, resulting in a sequence of
+                    384-dimensional feature vectors.</li>
+                <li> These embeddings serve as the input to our transformer-based sign encoder.</li>
+            </ul>
+            <p><b>Sign Transformer Encoder:</b></p>
+            <p>The core of the model is a custom Transformer encoder that learns temporal relationships in the sequence
+                of embeddings. It includes:</p>
+            <ul>
+                <li>Positional Encoding: Adds sinusoidal positional encodings to retain temporal order information.</li>
+                <li>Transformer Layers: A stack of 4 Transformer encoder layers with multi-head self attention and
+                    feed-forward networks.</li>
+            </ul>
+            <p><b>Prototype-Based Pretraining Module:</b></p>
+            <ul>
+                <li>The final model learns to detect pseudo-glosses by comparing encoded features to
+                    a fixed set of 300-dimensional pseudo-gloss prototypes (based on fastText
+                    embeddings).</li>
+                <li>
+                    Cosine similarity, softmax, and a custom localization matrix are used to predict the
+                    presence of each pseudo-gloss in the video.
+                </li>
+                <li>The model is trained using binary cross-entropy loss against pseudo-gloss
+                    presence labels.</li>
+            </ul>
+            <div class="image-container">
+                <img src="./architecture.png" alt="Model architecture diagram" class="arch-image" />
+            </div>
+        </section>
+        <section id="results" class="fade-in">
+            <h2>Results</h2>
+            <div clas="table-container"
+                style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+                <table style="width: 50%; border-collapse: collapse; margin: 20px 0; font-family: Arial, sans-serif;">
+                    <caption style="caption-side: top; font-weight: bold; font-size: 1.2em; margin-bottom: 10px;">
+                        Model Evaluation Metrics
+                    </caption>
+
+                    <thead>
+                        <tr>
+                            <th style="border: 1px solid #ccc; text-align: center; padding: 8px;">
+                                Metric
+                            </th>
+                            <th style="border: 1px solid #ccc; text-align: center; padding: 8px;">
+                                Score
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="border: 1px solid #ccc; text-align: center; padding: 8px;">Precision</td>
+                            <td style="border: 1px solid #ccc; text-align: center; padding: 8px;">0.2630</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #ccc; text-align: center; padding: 8px;">Recall</td>
+                            <td style="border: 1px solid #ccc; text-align: center; padding: 8px;">0.3100</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #ccc; text-align: center; padding: 8px;">F1 Score</td>
+                            <td style="border: 1px solid #ccc; text-align: center; padding: 8px;">0.2845</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p><b>Prediction Matrices:</b></p>
+            <div class="matrix-list">
+                <div class="matrix-container"><img src="matrix1.png" alt="Prediction matrix 1" />
+                    <p>Figure 1 - Sample Prediction Matrix</p>
+                </div>
+                <p>Figure 1. The model peaks on wettervorhersage at the very beginning, then on
+                    nun, and later on mittwoch, dreißigsten, and märz exactly when those signs
+                    are performed.</p>
+                <div class="matrix-container"><img src="matrix3.png" alt="Prediction matrix 3" />
+                    <p>Figure 2 - Sample Prediction Matrix</p>
+                </div>
+                <p>
+                    Figure 2. Clear
+                    activations appear for schwach, mäßig, and wind, and a distinct, though
+                    lower-amplitude, response for südwest, demonstrating effective unsupervised
+                    temporal grounding of multiple glosses.
+                </p>
+            </div>
+        </section>
+        <section id="conclusions" class="fade-in">
+            <h2>Conclusions</h2>
+            <p>The outcomes of this project have significant implications for the development of lightweight,
+                gloss-free sign language processing systems. Traditional sign language translation (SLT)
+                pipelines rely heavily on gloss annotations, which are expensive and time-consuming to obtain
+                at scale. By contrast, this work demonstrates that meaningful pseudo-gloss representations can
+                be learned from visual-only data using a relatively compact encoder architecture trained with
+                weak supervision.</p>
+            <p>
+                If continued in the future, the project could advance along multiple dimensions. Fine-tuning with
+                a translation head, potentially even adopting the decoder module from Sign2GPT, would allow
+                end-to-end evaluation of translation quality. Deeper transformer stacks could be trained using
+                LoRA or QLoRA optimizations, which would help manage GPU memory costs while scaling
+                model capacity. Performance could also benefit from more sophisticated data augmentations
+                that preserve spatial integrity or contrastive learning methods that align sign segments
+                temporally.
+            </p>
+        </section>
+        <section id="refs" class="fade-in">
+            <h2>References</h2>
+            <ul>
+                <li>[1] R. Wong, N. C. Camgoz, and R. Bowden, “Sign2GPT: Leveraging Large Language Models for Gloss
+                    Free Sign Language Translation,” arXiv preprint arXiv:2405.04164, 2024.
+                    [Online]. Available: https://doi.org/10.48550/arXiv.2405.04164</li>
+                <li>
+                    [2] H. Ney et al., “RWTH-PHOENIX-Weather 2014T: Sign language translation corpus,” RWTH Aachen
+                    University. [Online]. Available: https://www-i6.informatik.rwth-aachen.de/~koller/RWTH-PHOENIX
+                    2014-T/
+                </li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2025 Tamer Yeşildağ - Eray Taymaz</p>
+    </footer>
+
+    <!-- External medium-zoom library -->
+    <script src="https://unpkg.com/medium-zoom@1.0.6/dist/medium-zoom.min.js"></script>
+    <!-- Inlined script.js content -->
+    <script>
+        console.log('bg-canvas script is running');
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let pts = [], W, H;
+        const cfg = { count: 80, maxDist: 120, speed: 0.3, lineWidth: 1, pointRadius: 1.2 };
+        function init() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; pts = []; for (let i = 0; i < cfg.count; i++) { pts.push({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - 0.5) * cfg.speed, vy: (Math.random() - 0.5) * cfg.speed }); } }
+        function draw() { ctx.clearRect(0, 0, W, H); for (let i = 0; i < pts.length; i++) { for (let j = i + 1; j < pts.length; j++) { const dx = pts[i].x - pts[j].x; const dy = pts[i].y - pts[j].y; const d = Math.hypot(dx, dy); if (d < cfg.maxDist) { const alpha = 1 - d / cfg.maxDist; ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.6})`; ctx.lineWidth = cfg.lineWidth; ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y); ctx.stroke(); } } } pts.forEach(p => { ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.beginPath(); ctx.arc(p.x, p.y, cfg.pointRadius, 0, Math.PI * 2); ctx.fill(); p.x += p.vx; p.y += p.vy; if (p.x < 0 || p.x > W) p.vx *= -1; if (p.y < 0 || p.y > H) p.vy *= -1; }); requestAnimationFrame(draw); }
+        init(); draw(); window.addEventListener('resize', init);
+        document.querySelectorAll('a[href^="#"]').forEach(a => { a.addEventListener('click', e => { e.preventDefault(); document.querySelector(a.getAttribute('href')).scrollIntoView({ behavior: 'smooth' }); }); });
+        const observer = new IntersectionObserver(entries => { entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('visible'); observer.unobserve(en.target); } }); }, { threshold: 0.2 });
+        document.querySelectorAll('.fade-in').forEach(sec => observer.observe(sec));
+        const sections = document.querySelectorAll('main section[id]');
+        const navLinks = document.querySelectorAll('nav a');
+        const observerOpts = { root: null, rootMargin: '0px 0px -60% 0px', threshold: 0 };
+        const sectionObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+                    navLinks.forEach(link => {
+                        link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+                    });
+                }
+            });
+        }, observerOpts);
+        sections.forEach(section => sectionObserver.observe(section));
+        // Initialize medium-zoom
+        mediumZoom('img', { margin: 24, background: 'rgba(0,0,0,0.8)', scrollOffset: 40 });
+    </script>
+</body>
+
+</html>
