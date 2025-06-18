@@ -74,6 +74,7 @@
             z-index: 2;
             border-bottom: 1px solid white;
             border-radius: 0;
+            max-width: 1200px;
         }
 
         h1 {
@@ -191,7 +192,7 @@
             width: 70%;
         }
 
-        .experiments-image{
+        .experiments-image {
             width: 50%;
         }
 
@@ -214,6 +215,10 @@
             margin-bottom: 0px;
             text-align: center;
         }
+
+        .poster-image {
+            width: 30%;
+        }
     </style>
 </head>
 
@@ -224,12 +229,15 @@
     <header>
         <nav>
             <ul>
+                <li><a href="#video">Video</a></li>
                 <li><a href="#intro">Introduction</a></li>
                 <li><a href="#dataset">Dataset</a></li>
                 <li><a href="#architecture">Model Architecture</a></li>
                 <li><a href="#results">Results</a></li>
                 <li><a href="#experiments">Experiments</a></li>
                 <li><a href="#conclusions">Conclusions</a></li>
+                <li><a href="#source-code">Source Code</a></li>
+                <li><a href="#poster">Poster</a></li>
                 <li><a href="#refs">References</a></li>
             </ul>
         </nav>
@@ -241,6 +249,16 @@
             <p>Tamer Yeşildağ - Eray Taymaz</p>
             <p>Advisor: Assoc. Prof. Hacer Yalım Keleş</p>
         </div>
+        <section id="video">
+            <h2>Video</h2>
+            <p>Here is a video demonstrating the project</p>
+            <div class="image-container">
+                <video controls width="100%">
+                    <source src="./demo.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </section>
         <section id="intro" class="fade-in">
             <h2>Introduction</h2>
             <p> Sign language is a rich and complex visual language that plays a crucial role in
@@ -401,6 +419,27 @@
                 that preserve spatial integrity or contrastive learning methods that align sign segments
                 temporally.
             </p>
+        </section>
+        <section id="source-code">
+            <h2>Source Code</h2>
+            <p><a target="_blank" rel="noopener noreferrer"
+                    href="https://colab.research.google.com/drive/1za4zHX78Nqzcw10CE-4G9NGYHBAGclCd?usp=sharing">Notebook
+                    for creating the pseudo-gloss embeddings</a></p>
+            <p><a target="_blank" rel="noopener noreferrer"
+                    href="https://colab.research.google.com/drive/1P8rmjHCzgt5FjJWg7HnBhlmdeC70vJnJ?usp=sharing">Notebook
+                    for creating the dino embeddings</a></p>
+            <p><a target="_blank" rel="noopener noreferrer"
+                    href="https://colab.research.google.com/drive/1FgjGIzk04ob-AregMPFOy1jeQCMaS_cK?usp=sharing">Notebook
+                    for the sign encoder</a></p>
+        </section>
+        <section id="poster">
+            <h2>Poster</h2>
+            <div class="image-container">
+                <a target="_blank" rel="noopener noreferrer"
+                    href="https://drive.google.com/file/d/1k2OgNz3eeAgaXPqzaQnpT-xcvzcpyQ4b/view?usp=sharing">
+                    <img src="./poster.png" alt="Poster" class="poster-image" />
+                </a>
+            </div>
         </section>
         <section id="refs" class="fade-in">
             <h2>References</h2>
