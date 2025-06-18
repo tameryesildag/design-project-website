@@ -15,6 +15,16 @@
             text-align: justify;
         }
 
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            /* fallback */
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -24,14 +34,23 @@
             color: #ddd;
         }
 
-        #bg-canvas {
+        /* Particle background container */
+        #particles-js {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 0;
-            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Ensure site content stays above the effect */
+        header,
+        main,
+        footer,
+        section {
+            position: relative;
+            z-index: 1;
         }
 
         main,
@@ -178,7 +197,6 @@
 
         .matrix-container p {
             text-align: center;
-            ;
             margin-top: 0px;
         }
 
@@ -187,16 +205,17 @@
             color: lightblue;
         }
 
-        .credits p{
+        .credits p {
             margin-top: 0px;
             margin-bottom: 0px;
-            text-align: center;;
+            text-align: center;
         }
     </style>
 </head>
 
 <body>
-    <canvas id="bg-canvas"></canvas>
+    <!-- Particle background container -->
+    <div id="particles-js"></div>
 
     <header>
         <nav>
@@ -390,25 +409,96 @@
         <p>© 2025 Tamer Yeşildağ - Eray Taymaz</p>
     </footer>
 
-    <!-- External medium-zoom library -->
+    <!-- External libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <script src="https://unpkg.com/medium-zoom@1.0.6/dist/medium-zoom.min.js"></script>
-    <!-- Inlined script.js content -->
+
+    <!-- Initialize particles.js -->
     <script>
-        console.log('bg-canvas script is running');
-        const canvas = document.getElementById('bg-canvas');
-        const ctx = canvas.getContext('2d');
-        let pts = [], W, H;
-        const cfg = { count: 80, maxDist: 120, speed: 0.3, lineWidth: 1, pointRadius: 1.2 };
-        function init() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; pts = []; for (let i = 0; i < cfg.count; i++) { pts.push({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - 0.5) * cfg.speed, vy: (Math.random() - 0.5) * cfg.speed }); } }
-        function draw() { ctx.clearRect(0, 0, W, H); for (let i = 0; i < pts.length; i++) { for (let j = i + 1; j < pts.length; j++) { const dx = pts[i].x - pts[j].x; const dy = pts[i].y - pts[j].y; const d = Math.hypot(dx, dy); if (d < cfg.maxDist) { const alpha = 1 - d / cfg.maxDist; ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.6})`; ctx.lineWidth = cfg.lineWidth; ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y); ctx.stroke(); } } } pts.forEach(p => { ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.beginPath(); ctx.arc(p.x, p.y, cfg.pointRadius, 0, Math.PI * 2); ctx.fill(); p.x += p.vx; p.y += p.vy; if (p.x < 0 || p.x > W) p.vx *= -1; if (p.y < 0 || p.y > H) p.vy *= -1; }); requestAnimationFrame(draw); }
-        init(); draw(); window.addEventListener('resize', init);
-        document.querySelectorAll('a[href^="#"]').forEach(a => { a.addEventListener('click', e => { e.preventDefault(); document.querySelector(a.getAttribute('href')).scrollIntoView({ behavior: 'smooth' }); }); });
-        const observer = new IntersectionObserver(entries => { entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('visible'); observer.unobserve(en.target); } }); }, { threshold: 0.2 });
-        document.querySelectorAll('.fade-in').forEach(sec => observer.observe(sec));
+        /* Interactive particle configuration */
+        particlesJS('particles-js', {
+            "particles": {
+                "number": {
+                    "value": 60,
+                    "density": { "enable": true, "value_area": 800 }
+                },
+                "color": { "value": "#ffffff" },
+                "shape": {
+                    "type": "circle",
+                    "stroke": { "width": 0, "color": "#000000" }
+                },
+                "opacity": {
+                    "value": 0.5,
+                    "random": false,
+                    "anim": { "enable": false, "speed": 1, "opacity_min": 0.1, "sync": false }
+                },
+                "size": {
+                    "value": 3,
+                    "random": true,
+                    "anim": { "enable": false, "speed": 40, "size_min": 0.1, "sync": false }
+                },
+                "line_linked": {
+                    "enable": true,
+                    "distance": 150,
+                    "color": "#ffffff",
+                    "opacity": 0.4,
+                    "width": 1
+                },
+                "move": {
+                    "enable": true,
+                    "speed": 3,
+                    "direction": "none",
+                    "random": true,
+                    "straight": false,
+                    "out_mode": "out",
+                    "attract": { "enable": true, "rotateX": 600, "rotateY": 1200 }
+                }
+            },
+            "interactivity": {
+                "detect_on": "window",
+                "events": {
+                    "onhover": { "enable": true, "mode": "repulse" },
+                    "onclick": { "enable": true, "mode": "push" },
+                    "resize": true
+                },
+                "modes": {
+                    "grab": { "distance": 400, "line_linked": { "opacity": 1 } },
+                    "bubble": { "distance": 400, "size": 40, "duration": 2, "opacity": 8, "speed": 1 },
+                    "repulse": { "distance": 100, "duration": 0.4 },
+                    "push": { "particles_nb": 4 },
+                    "remove": { "particles_nb": 2 }
+                }
+            },
+            "retina_detect": true
+        });
+    </script>
+
+    <!-- Page behaviour scripts (smooth scroll, fade-in, nav highlight, zoom) -->
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', e => {
+                e.preventDefault();
+                document.querySelector(anchor.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        // Fade-in on scroll
+        const fadeObserver = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    fadeObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.2 });
+
+        document.querySelectorAll('.fade-in').forEach(el => fadeObserver.observe(el));
+
+        // Section highlighting in nav
         const sections = document.querySelectorAll('main section[id]');
         const navLinks = document.querySelectorAll('nav a');
-        const observerOpts = { root: null, rootMargin: '0px 0px -60% 0px', threshold: 0 };
-        const sectionObserver = new IntersectionObserver((entries) => {
+        const sectionObserver = new IntersectionObserver(entries => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const id = entry.target.id;
@@ -417,10 +507,16 @@
                     });
                 }
             });
-        }, observerOpts);
+        }, { root: null, rootMargin: '0px 0px -60% 0px', threshold: 0 });
+
         sections.forEach(section => sectionObserver.observe(section));
-        // Initialize medium-zoom
-        mediumZoom('img', { margin: 24, background: 'rgba(0,0,0,0.8)', scrollOffset: 40 });
+
+        // Initialize medium-zoom for images
+        mediumZoom('img', {
+            margin: 24,
+            background: 'rgba(0,0,0,0.8)',
+            scrollOffset: 40
+        });
     </script>
 </body>
 
